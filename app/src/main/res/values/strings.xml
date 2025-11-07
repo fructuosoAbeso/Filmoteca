@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">Filmoteca</string>
+    <string name="about_image">Imagen ilustrativa de la sección About</string>
+    <string name="tituloPrincipal">¿Qué te gustaría ver?</string>
+    <string name="Acercade">Acerca de</string>
+    <string name="VerpelículaA">Ver película A</string>
+    <string name="VerpelículaB">Ver película B</string>
+    <string name="Datosdelapelícula">Datos de la película</string>
+    <string name="Editarpelícula"> Editar película</string>
+    <string name="Verpelícularelacionada"> Ver película relacionada</string>
+    <string name="Volveralaprincipal">Volver a la principal</string>
+    <string name="ejerficio_1">Ejerficio uno</string>
+    <string name="vertical_orirntacio">Desarrollo e internacionalización de una app Android con Jetpack Compose.</string>
+    <string name="app_head">Ejerficios del Master</string>
+    <string name="about_activity">ABOUT ACTIVITY</string>
+    <string name="creada_por">Creada por Fructuoso</string>
+    <string name="ir_al_sitio_web">Ir al sitio web</string>
+    <string name="obtener_soporte">Obtener soporte</string>
+    <string name="volver">Volver</string>
+    <string name="titulo_soporte">Centro de Soporte</string>
+    <string name="descripcion_soporte">Estamos aquí para ayudarte. Si tienes preguntas, problemas con tus transacciones o necesitas asistencia técnica, puedes contactarnos a través de los siguientes medios o enviarnos un mensaje directamente.</string>
+    <string name="enviar_mensaje">Enviar mensaje</string>
+    <string name="soporte_c">Centro de Soporte</string>
+    <string name="coreo">📧  Correo: soporte@elpacmoneytransfer.es</string>
+    <string name="telefono">📞  Teléfono: +34 612 345 678</string>
+    <string name="horario">⏰  Horario: Lunes a Viernes, 9:00 - 18:00</string>
+    <string name="campo_ensaje">Escribe tu mensaje aquí...</string>
+    <string name="imagen_pelicula">Aquí va la descripción de la película seleccionada. Puedes editar los datos más abajo.</string>
+    <string name="poster">Póster</string>
+    <string name="title">Título</string>
+    <string name="director">Director</string>
+    <string name="year">Año de estreno</string>
+</resources>
+
