@@ -9,6 +9,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -36,6 +38,12 @@ class AboutActivity : ComponentActivity() {
                 },
                 onBack = {
                     finish()
+                },
+                onNavigateHome = {
+                    val intent = Intent(this, FlimListActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                    finish()
                 }
             )
         }
@@ -47,22 +55,32 @@ class AboutActivity : ComponentActivity() {
 fun AboutScreen(
     onWebsite: () -> Unit,
     onSupport: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateHome: () -> Unit
 ) {
     Scaffold(
-        // 🟦 Header igual al resto
+        // 🟦 AppBar con icono de navegación
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "ℹ️ Acerca de",
+                        text = "HOME",
                         color = Color.White,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
                 },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateHome) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Volver al inicio",
+                            tint = Color.White
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0D47A1), // Azul profundo
+                    containerColor = Color(0xFF0D47A1),
                     titleContentColor = Color.White
                 )
             )
@@ -125,7 +143,7 @@ fun AboutScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 🔙 Botón Volver
+            // 🔙 Botón Volver (manteniendo tu diseño)
             Button(
                 onClick = onBack,
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),

@@ -9,6 +9,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,7 +42,13 @@ class SoporteActivity : ComponentActivity() {
                         }
                     }
                 },
-                onBack = { finish() }
+                onBack = { finish() },
+                onNavigateHome = {
+                    val intent = Intent(this, FlimListActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                    finish()
+                }
             )
         }
     }
@@ -50,7 +58,8 @@ class SoporteActivity : ComponentActivity() {
 @Composable
 fun SoporteScreen(
     onSend: (String) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateHome: () -> Unit
 ) {
     var mensaje by remember { mutableStateOf(TextFieldValue("")) }
 
@@ -59,11 +68,21 @@ fun SoporteScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "🛠 Soporte",
+                        "HOME",
                         color = Color.White,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
+                },
+                // 🔹 Agregado: icono de navegación a Home
+                navigationIcon = {
+                    IconButton(onClick = onNavigateHome) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Volver al inicio",
+                            tint = Color.White
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFF0D47A1),

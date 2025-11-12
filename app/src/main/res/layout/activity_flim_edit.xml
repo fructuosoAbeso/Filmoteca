@@ -15,7 +15,7 @@
         android:layout_height="320dp"
         android:layout_marginTop="40dp"
         android:contentDescription="@string/imagen_pelicula"
-        android:src="@drawable/sample_movie"
+        android:src="@drawable/avatar"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

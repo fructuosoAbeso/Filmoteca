@@ -1,5 +1,6 @@
 package es.ua.eps.filmoteca
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
@@ -17,20 +18,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 
 class FlimEditActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Lanza la cámara
+        val imageResId = intent.getIntExtra("imageResId", R.drawable.avatar)
+
         val takePhotoLauncher =
             registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
                 if (bitmap != null) {
@@ -38,7 +38,6 @@ class FlimEditActivity : ComponentActivity() {
                 }
             }
 
-        // Selección de imagen desde galería
         val pickImageLauncher =
             registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
                 if (uri != null) {
@@ -48,13 +47,20 @@ class FlimEditActivity : ComponentActivity() {
 
         setContent {
             EditFilmScreen(
+                imageResId = imageResId,
                 onTakePhoto = { takePhotoLauncher.launch(null) },
                 onSelectImage = { pickImageLauncher.launch("image/*") },
                 onSave = { title, director, year, genre, format, imdb, notes ->
                     Toast.makeText(this, "Película guardada", Toast.LENGTH_SHORT).show()
                     finish()
                 },
-                onBack = { finish() }
+                onBack = { finish() },
+                onNavigateHome = { // 🔹 Ir a Home
+                    val intent = Intent(this, FlimListActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    startActivity(intent)
+                    finish()
+                }
             )
         }
     }
@@ -63,26 +69,30 @@ class FlimEditActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditFilmScreen(
+    imageResId: Int,
     onTakePhoto: () -> Unit,
     onSelectImage: () -> Unit,
     onSave: (String, String, String, String, String, String, String) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateHome: () -> Unit
 ) {
     val configuration = LocalConfiguration.current
     if (configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
-        EditFilmScreenLandscape(onTakePhoto, onSelectImage, onSave, onBack)
+        EditFilmScreenLandscape(imageResId, onTakePhoto, onSelectImage, onSave, onBack, onNavigateHome)
     } else {
-        EditFilmScreenPortrait(onTakePhoto, onSelectImage, onSave, onBack)
+        EditFilmScreenPortrait(imageResId, onTakePhoto, onSelectImage, onSave, onBack, onNavigateHome)
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditFilmScreenPortrait(
+    imageResId: Int,
     onTakePhoto: () -> Unit,
     onSelectImage: () -> Unit,
     onSave: (String, String, String, String, String, String, String) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateHome: () -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var director by remember { mutableStateOf("") }
@@ -92,16 +102,25 @@ fun EditFilmScreenPortrait(
     var imdb by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
 
-    val genres = listOf("Acción", "Drama", "Comedia", "Terror", "Sci-Fi")
-    val formats = listOf("DVD", "Blu-ray", "Online")
+    val genreOptions = listOf("Acción", "Drama", "Comedia", "Terror", "Sci-Fi")
+    val formatOptions = listOf("DVD", "Blu-ray", "Online")
 
-    var expandedGenre by remember { mutableStateOf(false) }
-    var expandedFormat by remember { mutableStateOf(false) }
+    var genreExpanded by remember { mutableStateOf(false) }
+    var formatExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Editar película", color = Color.White) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateHome) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "HOME",
+                            tint = Color.White
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.mediumTopAppBarColors(containerColor = Color(0xFF1E88E5))
             )
         },
@@ -115,29 +134,34 @@ fun EditFilmScreenPortrait(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-            // Imagen + botones
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.sample_movie),
+                    painter = painterResource(id = imageResId),
                     contentDescription = "Póster",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .width(100.dp)
-                        .height(150.dp)
+                        .width(120.dp)
+                        .height(160.dp)
+                        .background(Color.DarkGray)
                 )
+
                 Spacer(modifier = Modifier.width(16.dp))
-                Column {
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Button(
                         onClick = onTakePhoto,
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3)),
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Tomar fotografía", color = Color.White)
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
                     Button(
                         onClick = onSelectImage,
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3)),
@@ -150,64 +174,49 @@ fun EditFilmScreenPortrait(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campos de texto
             OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
-                label = { Text("Título", color = Color.LightGray) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                textStyle = LocalTextStyle.current.copy(color = Color.White)
+                value = title, onValueChange = { title = it },
+                label = { Text("Título") }, modifier = Modifier.fillMaxWidth()
             )
-
             Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
-                value = director,
-                onValueChange = { director = it },
-                label = { Text("Director", color = Color.LightGray) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                textStyle = LocalTextStyle.current.copy(color = Color.White)
+                value = director, onValueChange = { director = it },
+                label = { Text("Director") }, modifier = Modifier.fillMaxWidth()
             )
-
             Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
-                value = year,
-                onValueChange = { year = it },
-                label = { Text("Año de estreno", color = Color.LightGray) },
+                value = year, onValueChange = { year = it },
+                label = { Text("Año") },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                textStyle = LocalTextStyle.current.copy(color = Color.White)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
-
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Dropdown género
             ExposedDropdownMenuBox(
-                expanded = expandedGenre,
-                onExpandedChange = { expandedGenre = !expandedGenre }
+                expanded = genreExpanded,
+                onExpandedChange = { genreExpanded = !genreExpanded }
             ) {
                 OutlinedTextField(
                     value = genre,
                     onValueChange = {},
-                    label = { Text("Género", color = Color.LightGray) },
                     readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedGenre) },
-                    modifier = Modifier.fillMaxWidth(),
-                    textStyle = LocalTextStyle.current.copy(color = Color.White)
+                    label = { Text("Género") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = genreExpanded) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
                 )
-                DropdownMenu(
-                    expanded = expandedGenre,
-                    onDismissRequest = { expandedGenre = false },
-                    modifier = Modifier.background(Color(0xFF1E1E1E))
+                ExposedDropdownMenu(
+                    expanded = genreExpanded,
+                    onDismissRequest = { genreExpanded = false }
                 ) {
-                    genres.forEach { g ->
+                    genreOptions.forEach { option ->
                         DropdownMenuItem(
-                            text = { Text(g, color = Color.White) },
-                            onClick = { genre = g; expandedGenre = false }
+                            text = { Text(option) },
+                            onClick = {
+                                genre = option
+                                genreExpanded = false
+                            }
                         )
                     }
                 }
@@ -215,29 +224,29 @@ fun EditFilmScreenPortrait(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Dropdown formato
             ExposedDropdownMenuBox(
-                expanded = expandedFormat,
-                onExpandedChange = { expandedFormat = !expandedFormat }
+                expanded = formatExpanded,
+                onExpandedChange = { formatExpanded = !formatExpanded }
             ) {
                 OutlinedTextField(
                     value = format,
                     onValueChange = {},
-                    label = { Text("Formato", color = Color.LightGray) },
                     readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedFormat) },
-                    modifier = Modifier.fillMaxWidth(),
-                    textStyle = LocalTextStyle.current.copy(color = Color.White)
+                    label = { Text("Formato") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = formatExpanded) },
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
                 )
-                DropdownMenu(
-                    expanded = expandedFormat,
-                    onDismissRequest = { expandedFormat = false },
-                    modifier = Modifier.background(Color(0xFF1E1E1E))
+                ExposedDropdownMenu(
+                    expanded = formatExpanded,
+                    onDismissRequest = { formatExpanded = false }
                 ) {
-                    formats.forEach { f ->
+                    formatOptions.forEach { option ->
                         DropdownMenuItem(
-                            text = { Text(f, color = Color.White) },
-                            onClick = { format = f; expandedFormat = false }
+                            text = { Text(option) },
+                            onClick = {
+                                format = option
+                                formatExpanded = false
+                            }
                         )
                     }
                 }
@@ -246,39 +255,33 @@ fun EditFilmScreenPortrait(
             Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
-                value = imdb,
-                onValueChange = { imdb = it },
-                label = { Text("Enlace a IMDB", color = Color.LightGray) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                textStyle = LocalTextStyle.current.copy(color = Color.White)
+                value = imdb, onValueChange = { imdb = it },
+                label = { Text("IMDb") }, modifier = Modifier.fillMaxWidth()
             )
-
             Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
-                value = notes,
-                onValueChange = { notes = it },
-                label = { Text("Notas", color = Color.LightGray) },
-                modifier = Modifier.fillMaxWidth().height(120.dp),
-                textStyle = LocalTextStyle.current.copy(color = Color.White)
+                value = notes, onValueChange = { notes = it },
+                label = { Text("Notas") }, modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Botones
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Button(
-                    onClick = onBack,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray),
-                    modifier = Modifier.weight(1f).padding(end = 8.dp)
-                ) { Text("Volver", color = Color.White) }
-
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 Button(
                     onClick = { onSave(title, director, year, genre, format, imdb, notes) },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20)),
-                    modifier = Modifier.weight(1f).padding(start = 8.dp)
-                ) { Text("Guardar", color = Color.White) }
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Guardar", color = Color.White)
+                }
+
+                OutlinedButton(onClick = onBack, modifier = Modifier.weight(1f)) {
+                    Text("Cancelar")
+                }
             }
         }
     }
@@ -287,171 +290,12 @@ fun EditFilmScreenPortrait(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditFilmScreenLandscape(
+    imageResId: Int,
     onTakePhoto: () -> Unit,
     onSelectImage: () -> Unit,
     onSave: (String, String, String, String, String, String, String) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateHome: () -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
-    var director by remember { mutableStateOf("") }
-    var year by remember { mutableStateOf("") }
-    var genre by remember { mutableStateOf("Acción") }
-    var format by remember { mutableStateOf("DVD") }
-    var imdb by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
-
-    val genres = listOf("Acción", "Drama", "Comedia", "Terror", "Sci-Fi")
-    val formats = listOf("DVD", "Blu-ray", "Online")
-
-    var expandedGenre by remember { mutableStateOf(false) }
-    var expandedFormat by remember { mutableStateOf(false) }
-
-    Row(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-            .padding(16.dp),
-        verticalAlignment = Alignment.Top
-    ) {
-        // Imagen a la izquierda
-        Image(
-            painter = painterResource(id = R.drawable.sample_movie),
-            contentDescription = "Póster",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .width(150.dp)
-                .height(220.dp)
-        )
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        // Datos a la derecha
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.Start
-        ) {
-            OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
-                label = { Text("Título", color = Color.LightGray) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                textStyle = LocalTextStyle.current.copy(color = Color.White)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = director,
-                onValueChange = { director = it },
-                label = { Text("Director", color = Color.LightGray) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                textStyle = LocalTextStyle.current.copy(color = Color.White)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = year,
-                onValueChange = { year = it },
-                label = { Text("Año de estreno", color = Color.LightGray) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                textStyle = LocalTextStyle.current.copy(color = Color.White)
-            )
-
-            // Dropdown género
-            Spacer(modifier = Modifier.height(8.dp))
-            ExposedDropdownMenuBox(
-                expanded = expandedGenre,
-                onExpandedChange = { expandedGenre = !expandedGenre }
-            ) {
-                OutlinedTextField(
-                    value = genre,
-                    onValueChange = {},
-                    label = { Text("Género", color = Color.LightGray) },
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedGenre) },
-                    modifier = Modifier.fillMaxWidth(),
-                    textStyle = LocalTextStyle.current.copy(color = Color.White)
-                )
-                DropdownMenu(
-                    expanded = expandedGenre,
-                    onDismissRequest = { expandedGenre = false },
-                    modifier = Modifier.background(Color(0xFF1E1E1E))
-                ) {
-                    genres.forEach { g ->
-                        DropdownMenuItem(
-                            text = { Text(g, color = Color.White) },
-                            onClick = { genre = g; expandedGenre = false }
-                        )
-                    }
-                }
-            }
-
-            // Dropdown formato
-            Spacer(modifier = Modifier.height(8.dp))
-            ExposedDropdownMenuBox(
-                expanded = expandedFormat,
-                onExpandedChange = { expandedFormat = !expandedFormat }
-            ) {
-                OutlinedTextField(
-                    value = format,
-                    onValueChange = {},
-                    label = { Text("Formato", color = Color.LightGray) },
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedFormat) },
-                    modifier = Modifier.fillMaxWidth(),
-                    textStyle = LocalTextStyle.current.copy(color = Color.White)
-                )
-                DropdownMenu(
-                    expanded = expandedFormat,
-                    onDismissRequest = { expandedFormat = false },
-                    modifier = Modifier.background(Color(0xFF1E1E1E))
-                ) {
-                    formats.forEach { f ->
-                        DropdownMenuItem(
-                            text = { Text(f, color = Color.White) },
-                            onClick = { format = f; expandedFormat = false }
-                        )
-                    }
-                }
-            }
-
-            // Enlace a IMDB
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = imdb,
-                onValueChange = { imdb = it },
-                label = { Text("Enlace a IMDB", color = Color.LightGray) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                textStyle = LocalTextStyle.current.copy(color = Color.White)
-            )
-
-            // Notas
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = notes,
-                onValueChange = { notes = it },
-                label = { Text("Notas", color = Color.LightGray) },
-                modifier = Modifier.fillMaxWidth().height(120.dp),
-                textStyle = LocalTextStyle.current.copy(color = Color.White)
-            )
-
-            // Botones
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Button(
-                    onClick = onBack,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray),
-                    modifier = Modifier.weight(1f).padding(end = 8.dp)
-                ) { Text("Volver", color = Color.White) }
-
-                Button(
-                    onClick = { onSave(title, director, year, genre, format, imdb, notes) },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20)),
-                    modifier = Modifier.weight(1f).padding(start = 8.dp)
-                ) { Text("Guardar", color = Color.White) }
-            }
-        }
-    }
+    EditFilmScreenPortrait(imageResId, onTakePhoto, onSelectImage, onSave, onBack, onNavigateHome)
 }
